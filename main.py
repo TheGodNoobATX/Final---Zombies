@@ -35,7 +35,31 @@ fire(self):
 - appends the Bullet object to the players's bullet list
 '''
 class Player(Turtle):
-	pass
+	def __init__(self,x,y,leftkey,rightkey,shootkey):
+		super().__init__()
+		self.ht()
+		self.penup()
+		self.goto(x,y)
+		self.speed(0)
+		self.shape("turtle")
+		self.color("#FF0000")
+		self.bullets=[]
+		self.leftkey=leftkey
+		self.rightkey=rightkey
+		self.shootkey=shootkey
+		self.st()
+
+	def move(self):
+		self.forward(5)
+	
+	def goleft(self):
+		self.left(10)
+	
+	def goright(self):
+		self.right(10)
+	
+	def fire(self):
+		self.bullets.append(Bullet(self))
 
 '''
 Bullet() Class
@@ -55,12 +79,42 @@ die()
 - removes object from the player's bullet list
 '''
 
+class Bullet(Turtle):
+	def __init__(self,player):
+		super().__init__()
+		self.ht()
+		self.speed(0)
+		self.penup()
+		self.player = player
+		self.color = player.color()
+		self.goto(player.pos())
+		self.setheading(player.heading())
+		self.st()
+	
+	def move(self):
+		self.forward(15)
+	
+	def die(self):
+		self.ht()
+		self.player.bullets.remove(self)
 
 #### DRIVER CODE ####
 screen = Screen()
 screen.bgcolor("black")
 
 playing_area()
+p1=Player(0,0,"Left","Right","Up")
 
+onkeypress(p1.goleft,p1.leftkey)
+onkeypress(p1.goright,p1.rightkey)
+onkeypress(p1.fire,p1.shootkey)
+screen.listen()
+
+while True:
+	p1.move()
+	for bullet in p1.bullets:
+		bullet.move()
+		if bullet.xcor()<=-250 or bullet.ycor()<=-250 or bullet.xcor()>=250 or bullet.ycor()>=250:
+			bullet.die()
 
 screen.mainloop()
