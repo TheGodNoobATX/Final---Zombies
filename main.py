@@ -1,5 +1,6 @@
 from turtle import *
-from random import randint, choice
+import random
+import time
 
 #### CLASS AND FUNCTION DEFINITIONS #####
 def playing_area():
@@ -16,26 +17,22 @@ def playing_area():
 		t.right(90)
 	t.end_fill()
 
-'''
-Player() Class
+def spawnDaZombies(prizesCollected):
+	for i in range((prizesCollected + 1)/2):
+		randx = random.randint(-250,250)
+		randy = random.randint(-250,250)
+		for p in [p1,p2]:
+			while (randx < p.xcor()+100 and randx > p.xcor()-100 and randy < p.ycor()+100 and randy > p.ycor()-100) or (randx<=-250 or randy<=-250 or randx>=250 or randy>=250):
+				randx = random.randint(-250,250)
+				randy = random.randint(-250,250)
+			if i%5 == 0 and i!=0:
+				zombies.append(BeefyBoi(randx,randy,p))
+			else:
+				zombies.append(Zombie(randx,randy,p))
 
-Constructor( def __init__(self)):
-- player should be shaped like a turtle.
-- will take in the x and y coordinates for where the player will initially appear.
-- will take in a color for the player
-- will take in keys to turn left, turn right and shoot bullets.
-- player will have an attribute that is a list that stores bullets
 
-
-move(self):
-- moves object forward five pixels
-
-fire(self):
-- creates a Bullet object
-- appends the Bullet object to the players's bullet list
-'''
 class Player(Turtle):
-	def __init__(self,x,y,leftkey,rightkey,shootkey):
+	def __init__(self,x,y,leftkey,rightkey,shootkey,bombkey):
 		super().__init__()
 		self.ht()
 		self.penup()
@@ -44,9 +41,12 @@ class Player(Turtle):
 		self.shape("turtle")
 		self.color("#FF0000")
 		self.bullets=[]
+		self.bombs=[]
 		self.leftkey=leftkey
 		self.rightkey=rightkey
 		self.shootkey=shootkey
+		self.bombkey=bombkey
+		self.points=0
 		self.st()
 
 	def move(self):
@@ -60,24 +60,12 @@ class Player(Turtle):
 	
 	def fire(self):
 		self.bullets.append(Bullet(self))
+	
+	def bomb(self):
+		self.bombs.append(Bomb(self))
 
-'''
-Bullet() Class
-Constructor ( def __init__(self) ):
-- Input: player object
-- Attributes:
-	- Position: same as player
-	- Heading: same as player
-	- Player: the player
- 
-move(self):
-- move 15 or more pixels forward
-- should call on the die() method when the bullet leaves the playing area
-
-die()
-- hides the object. 
-- removes object from the player's bullet list
-'''
+	def die(self):
+		self.ht()
 
 class Bullet(Turtle):
 	def __init__(self,player):
@@ -86,7 +74,7 @@ class Bullet(Turtle):
 		self.speed(0)
 		self.penup()
 		self.player = player
-		self.color = player.color()
+		self.color(player.color()[0])
 		self.goto(player.pos())
 		self.setheading(player.heading())
 		self.st()
@@ -98,23 +86,171 @@ class Bullet(Turtle):
 		self.ht()
 		self.player.bullets.remove(self)
 
+class Bomb(Turtle):
+	def __init__(self,player):
+		super().__init__()
+		self.ht()
+		self.speed(0)
+		self.penup()
+		self.player = player
+		self.shape("circle")
+		self.color(player.color()[0])
+		self.goto(player.pos())
+		self.detonationtimer=0
+		self.st()
+	
+	def BOOM(self):
+		self.ht()
+		self.goto(self.xcor(),self.ycor()+50)
+		self.pendown()
+		self.begin_fill()
+		self.circle(-50)
+		self.end_fill()
+		self.penup()
+		self.goto(self.xcor(),self.ycor()-50)
+		ded=[]
+		for i in range(len(zombies)-1):
+			if self.xcor()-50 < zombies[i].xcor() and self.ycor()-50 < zombies[i].ycor() and self.xcor()+50 > zombies[i].xcor() and self.ycor()+50 > zombies[i].ycor():
+				ded.append(zombies[i])
+		for deadzombie in ded:
+			deadzombie.die()
+		self.clear()
+		self.player.bombs.remove(self)
+
+class Zombie(Turtle):
+	def __init__(self,x,y,target):
+		super().__init__()
+		self.ht()
+		self.speed(0)
+		self.target = target
+		self.color("#008800")
+		self.shape("turtle")
+		self.penup()
+		self.goto(x,y)
+		self.setheading(self.towards(self.target))
+		self.st()
+	
+	def move(self):
+		self.forward(3)
+		self.setheading(self.towards(self.target))
+	
+	def die(self):
+		self.ht()
+		zombies.remove(self)
+
+class BeefyBoi(Turtle):
+	def __init__(self,x,y,target):
+		super().__init__()
+		self.ht()
+		self.speed(0)
+		self.target = target
+		self.hp=5
+		self.color("#008800")
+		self.shape("turtle")
+		self.shapesize(2)
+		self.penup()
+		self.goto(x,y)
+		self.setheading(self.towards(self.target))
+		self.st()
+	
+	def move(self):
+		self.forward(1.5)
+		self.setheading(self.towards(self.target))
+	
+	def die(self):
+		self.ht()
+		zombies.remove(self)
+
 #### DRIVER CODE ####
 screen = Screen()
 screen.bgcolor("black")
 
 playing_area()
-p1=Player(0,0,"Left","Right","Up")
+global p1
+p1=Player(10,0,"Left","Right","Up","Down")
+global p2
+p2=Player(10,0,"a","d","w","s")
+
+global zombies
+zombies = []
+
+prize = Turtle()
+prize.ht()
+prize.speed(0)
+prize.penup()
+prize.shape("circle")
+prize.color("#FFFF00")
+prize.goto(random.randint(-200,200),random.randint(-200,200))
+prize.setheading(random.randint(0,359))
+prize.st()
+prizesCollected = 0
 
 onkeypress(p1.goleft,p1.leftkey)
 onkeypress(p1.goright,p1.rightkey)
 onkeypress(p1.fire,p1.shootkey)
+onkeypress(p1.bomb,p1.bombkey)
+onkeypress(p2.goleft,p2.leftkey)
+onkeypress(p2.goright,p2.rightkey)
+onkeypress(p2.fire,p2.shootkey)
+onkeypress(p2.bomb,p2.bombkey)
 screen.listen()
 
 while True:
-	p1.move()
-	for bullet in p1.bullets:
-		bullet.move()
-		if bullet.xcor()<=-250 or bullet.ycor()<=-250 or bullet.xcor()>=250 or bullet.ycor()>=250:
-			bullet.die()
+	for p in [p1,p2]:
+		p.move()
+		if p.xcor() > 230 or p.xcor() < -230:
+			p.setheading(180 - p.heading())
+		if p.ycor() > 230 or p.ycor() < -230:
+			p.setheading(-p.heading())
+		if p.xcor() > prize.xcor()-30 and p.ycor() > prize.ycor()-30 and p.xcor() < prize.xcor()+30 and p.ycor() < prize.ycor()+30:
+			prize.ht()
+			p.points+=1
+			prizesCollected+=1
+			prize.goto(random.randint(-200,200),random.randint(-200,200))
+			prize.setheading(random.randint(0,359))
+			prize.st()
+			spawnDaZombies(prizesCollected)
+		
+		for bullet in p.bullets:
+			bullet.move()
+			if bullet.xcor()<=-250 or bullet.ycor()<=-250 or bullet.xcor()>=250 or bullet.ycor()>=250:
+				bullet.die()
+			else:
+				for zombie in zombies:
+					if type(zombie)==Zombie:
+						if bullet.xcor() > zombie.xcor()-20 and bullet.ycor() > zombie.ycor()-20 and bullet.xcor() < zombie.xcor()+20 and bullet.ycor() < zombie.ycor()+20:
+							bullet.die()
+							zombie.die()
+							break
+					elif type(zombie)==BeefyBoi:
+						if bullet.xcor() > zombie.xcor()-40 and bullet.ycor() > zombie.ycor()-40 and bullet.xcor() < zombie.xcor()+40 and bullet.ycor() < zombie.ycor()+40:
+							bullet.die()
+							if zombie.hp==1:
+								zombie.die()
+							else:
+								zombie.hp-=1
+								zombie.color("#FFFFFF")
+								time.sleep(0.1)
+								zombie.color("#008800")
+							break
+
+		for bomb in p.bombs:
+			if bomb.detonationtimer == 25:
+				bomb.BOOM()
+			else:
+				bomb.detonationtimer += 1
+		
+		for zombie in zombies:
+			zombie.move()
+			if p.xcor() > zombie.xcor()-30 and p.ycor() > zombie.ycor()-30 and p.xcor() < zombie.xcor()+30 and p.ycor() < zombie.ycor()+30:
+				p.die()
+	
+	prize.forward(5)
+	if prize.xcor() > 230 or prize.xcor() < -230:
+		prize.setheading(180 - prize.heading())
+	if prize.ycor() > 230 or prize.ycor() < -230:
+		prize.setheading(-prize.heading())
+	prize.left(random.randint(0,10))
+	prize.right(random.randint(0,10))
 
 screen.mainloop()
