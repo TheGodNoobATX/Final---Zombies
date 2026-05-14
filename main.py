@@ -17,11 +17,25 @@ def playing_area():
 		t.right(90)
 	t.end_fill()
 
+def updatePoints(t):
+	t.clear()
+	t.speed(0)
+	t.ht()
+	t.pu()
+	t.color("#FFFFFF")
+	t.goto(-300,0)
+	t.pd()
+	t.write("P1:" + str(p1.points), align="center", font=["Times New Roman","30"])
+	t.pu()
+	t.goto(300,0)
+	t.pd()
+	t.write("P2:" + str(p2.points), align="center", font=["Times New Roman","30"])
+
 def spawnDaZombies(prizesCollected):
-	for i in range((prizesCollected + 1)/2):
-		randx = random.randint(-250,250)
-		randy = random.randint(-250,250)
+	for i in range(prizesCollected + 1):
 		for p in [p1,p2]:
+			randx = random.randint(-250,250)
+			randy = random.randint(-250,250)
 			while (randx < p.xcor()+100 and randx > p.xcor()-100 and randy < p.ycor()+100 and randy > p.ycor()-100) or (randx<=-250 or randy<=-250 or randx>=250 or randy>=250):
 				randx = random.randint(-250,250)
 				randy = random.randint(-250,250)
@@ -32,14 +46,14 @@ def spawnDaZombies(prizesCollected):
 
 
 class Player(Turtle):
-	def __init__(self,x,y,leftkey,rightkey,shootkey,bombkey):
+	def __init__(self,x,y,leftkey,rightkey,shootkey,bombkey,color):
 		super().__init__()
 		self.ht()
 		self.penup()
 		self.goto(x,y)
 		self.speed(0)
 		self.shape("turtle")
-		self.color("#FF0000")
+		self.color(color)
 		self.bullets=[]
 		self.bombs=[]
 		self.leftkey=leftkey
@@ -66,6 +80,12 @@ class Player(Turtle):
 
 	def die(self):
 		self.ht()
+		dieTurtle = Turtle()
+		dieTurtle.home()
+		dieTurtle.ht()
+		dieTurtle.speed(0)
+		dieTurtle.color("#00AA00")
+		dieTurtle.write("Game over.\nZombie death!", align="center", font=("Times New Roman",50))
 
 class Bullet(Turtle):
 	def __init__(self,player):
@@ -167,9 +187,11 @@ screen.bgcolor("black")
 
 playing_area()
 global p1
-p1=Player(10,0,"Left","Right","Up","Down")
+p1=Player(10,0,"Left","Right","Up","Down","#FF0000")
 global p2
-p2=Player(10,0,"a","d","w","s")
+p2=Player(10,0,"a","d","w","s","#0000FF")
+pointsTurtle=Turtle()
+updatePoints(pointsTurtle)
 
 global zombies
 zombies = []
@@ -185,6 +207,9 @@ prize.setheading(random.randint(0,359))
 prize.st()
 prizesCollected = 0
 
+alive = True
+won = False
+
 onkeypress(p1.goleft,p1.leftkey)
 onkeypress(p1.goright,p1.rightkey)
 onkeypress(p1.fire,p1.shootkey)
@@ -195,7 +220,7 @@ onkeypress(p2.fire,p2.shootkey)
 onkeypress(p2.bomb,p2.bombkey)
 screen.listen()
 
-while True:
+while alive == True and won == False:
 	for p in [p1,p2]:
 		p.move()
 		if p.xcor() > 230 or p.xcor() < -230:
@@ -205,11 +230,14 @@ while True:
 		if p.xcor() > prize.xcor()-30 and p.ycor() > prize.ycor()-30 and p.xcor() < prize.xcor()+30 and p.ycor() < prize.ycor()+30:
 			prize.ht()
 			p.points+=1
+			if p.points == 10:
+				won = True
 			prizesCollected+=1
 			prize.goto(random.randint(-200,200),random.randint(-200,200))
 			prize.setheading(random.randint(0,359))
 			prize.st()
 			spawnDaZombies(prizesCollected)
+			updatePoints(pointsTurtle)
 		
 		for bullet in p.bullets:
 			bullet.move()
@@ -244,6 +272,7 @@ while True:
 			zombie.move()
 			if p.xcor() > zombie.xcor()-30 and p.ycor() > zombie.ycor()-30 and p.xcor() < zombie.xcor()+30 and p.ycor() < zombie.ycor()+30:
 				p.die()
+				alive = False
 	
 	prize.forward(5)
 	if prize.xcor() > 230 or prize.xcor() < -230:
@@ -252,5 +281,27 @@ while True:
 		prize.setheading(-prize.heading())
 	prize.left(random.randint(0,10))
 	prize.right(random.randint(0,10))
+
+if alive == False:
+	p1=""
+	p2=""
+	prize.ht()
+	prize=""
+	for zombie in zombies:
+		zombie.ht()
+
+if won == True:
+	p1=""
+	p2=""
+	prize.ht()
+	prize=""
+	for zombie in zombies:
+		zombie.ht()
+	winTurtle = Turtle()
+	winTurtle.home()
+	winTurtle.ht()
+	winTurtle.speed(0)
+	winTurtle.color("#00AA00")
+	winTurtle.write("Game over.\nPoints win!", align="center", font=("Times New Roman",50))
 
 screen.mainloop()
