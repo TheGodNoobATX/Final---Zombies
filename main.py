@@ -39,7 +39,7 @@ def spawnDaZombies(prizesCollected):
 			while (randx < p.xcor()+100 and randx > p.xcor()-100 and randy < p.ycor()+100 and randy > p.ycor()-100) or (randx<=-250 or randy<=-250 or randx>=250 or randy>=250):
 				randx = random.randint(-250,250)
 				randy = random.randint(-250,250)
-			if i%5 == 0 and i!=0:
+			if i%3 == 0 and i!=0:
 				zombies.append(BeefyBoi(randx,randy,p))
 			else:
 				zombies.append(Zombie(randx,randy,p))
